@@ -25,6 +25,7 @@ export type HostPlatform = 'win64' |
                            'mac12' | 'mac12-arm64' |
                            'mac13' | 'mac13-arm64' |
                            'mac14' | 'mac14-arm64' |
+                           'mac15' | 'mac15-arm64' |
                            'ubuntu18.04-x64' | 'ubuntu18.04-arm64' |
                            'ubuntu20.04-x64' | 'ubuntu20.04-arm64' |
                            'ubuntu22.04-x64' | 'ubuntu22.04-arm64' |
@@ -47,9 +48,9 @@ function calculatePlatform(): { hostPlatform: HostPlatform, isOfficiallySupporte
       macVersion = 'mac10.15';
     } else {
       // ver[0] >= 20
-      const LAST_STABLE_MAC_MAJOR_VERSION = 14;
+      const LAST_STABLE_MACOS_MAJOR_VERSION = 15;
       // Best-effort support for MacOS beta versions.
-      macVersion = 'mac' + Math.min(ver[0] - 9, LAST_STABLE_MAC_MAJOR_VERSION);
+      macVersion = 'mac' + Math.min(ver[0] - 9, LAST_STABLE_MACOS_MAJOR_VERSION);
       // BigSur is the first version that might run on Apple Silicon.
       if (os.cpus().some(cpu => cpu.model.includes('Apple')))
         macVersion += '-arm64';
@@ -85,15 +86,20 @@ function calculatePlatform(): { hostPlatform: HostPlatform, isOfficiallySupporte
         return { hostPlatform: ('ubuntu22.04' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform: false };
       return { hostPlatform: ('ubuntu24.04' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform: false };
     }
-    if (distroInfo?.id === 'debian' || distroInfo?.id === 'raspbian') {
+    if (distroInfo?.id === 'debian' || distroInfo?.id === 'raspbian' || distroInfo?.id === 'devuan') {
       const isOfficiallySupportedPlatform = distroInfo?.id === 'debian';
-      if (distroInfo?.version === '11')
+      let debianVersion = distroInfo?.version;
+      if (distroInfo.id === 'devuan') {
+        // Devuan is debian-based but it's always 7 versions behind
+        debianVersion = String(parseInt(distroInfo.version, 10) + 7);
+      }
+      if (debianVersion === '11')
         return { hostPlatform: ('debian11' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform };
-      if (distroInfo?.version === '12')
+      if (debianVersion === '12')
         return { hostPlatform: ('debian12' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform };
       // use most recent supported release for 'debian testing' and 'unstable'.
       // they never include a numeric version entry in /etc/os-release.
-      if (distroInfo?.version === '')
+      if (debianVersion === '')
         return { hostPlatform: ('debian12' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform };
     }
     return { hostPlatform: ('ubuntu20.04' + archSuffix) as HostPlatform, isOfficiallySupportedPlatform: false };

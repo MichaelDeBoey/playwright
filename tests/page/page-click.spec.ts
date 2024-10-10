@@ -85,8 +85,9 @@ it('should click on a span with an inline element inside', async ({ page }) => {
   expect(await page.evaluate('CLICKED')).toBe(42);
 });
 
-it('should not throw UnhandledPromiseRejection when page closes', async ({ page, isWebView2 }) => {
+it('should not throw UnhandledPromiseRejection when page closes', async ({ page, isWebView2, browserName, isWindows }) => {
   it.skip(isWebView2, 'Page.close() is not supported in WebView2');
+  it.fixme(browserName === 'firefox' && isWindows, 'makes the next test to always timeout');
 
   await Promise.all([
     page.close(),
@@ -336,7 +337,7 @@ it('should click the button inside an iframe', async ({ page, server }) => {
 });
 
 it('should click the button with fixed position inside an iframe', async ({ page, server, browserName }) => {
-  it.fixme(browserName === 'chromium' || browserName === 'webkit');
+  it.fixme(browserName === 'chromium');
 
   // @see https://github.com/GoogleChrome/puppeteer/issues/4110
   // @see https://bugs.chromium.org/p/chromium/issues/detail?id=986390

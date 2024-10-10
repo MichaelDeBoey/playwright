@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-import os from 'os';
 import { test as it, expect } from './pageTest';
 import { chromiumVersionLessThan } from '../config/utils';
 
-it('should work @smoke', async ({ page, browserName }) => {
+it('should work @smoke', async ({ page, browserName, macVersion }) => {
   await page.setContent(`
   <head>
     <title>Accessibility Test</title>
@@ -76,7 +75,8 @@ it('should work @smoke', async ({ page, browserName }) => {
       { role: 'textbox', name: '', value: 'value only' },
       { role: 'textbox', name: 'placeholder', value: 'and a value' },
       // due to frozen WebKit on macOS 11 we have the if/else here
-      { role: 'textbox', name: parseInt(os.release(), 10) >= 21 ? 'placeholder' : 'This is a description!', value: 'and a value' }, // webkit uses the description over placeholder for the name
+      // old webkit uses the description over placeholder for the name
+      { role: 'textbox', name: macVersion >= 12 ? 'placeholder' : 'This is a description!', value: 'and a value' },
     ]
   };
   expect(await page.accessibility.snapshot()).toEqual(golden);
@@ -143,9 +143,8 @@ it('should not report text nodes inside controls', async function({ page, browse
   expect(await page.accessibility.snapshot()).toEqual(golden);
 });
 
-it('rich text editable fields should have children', async function({ page, browserName, browserVersion, isWebView2 }) {
+it('rich text editable fields should have children', async function({ page, browserName, browserVersion }) {
   it.skip(browserName === 'webkit', 'WebKit rich text accessibility is iffy');
-  it.skip(isWebView2, 'WebView2 is missing a Chromium fix');
 
   await page.setContent(`
   <div contenteditable="true">
@@ -177,9 +176,8 @@ it('rich text editable fields should have children', async function({ page, brow
   expect(snapshot.children[0]).toEqual(golden);
 });
 
-it('rich text editable fields with role should have children', async function({ page, browserName, browserVersion, isWebView2 }) {
+it('rich text editable fields with role should have children', async function({ page, browserName, browserVersion }) {
   it.skip(browserName === 'webkit', 'WebKit rich text accessibility is iffy');
-  it.skip(isWebView2, 'WebView2 is missing a Chromium fix');
 
   await page.setContent(`
   <div contenteditable="true" role='textbox'>

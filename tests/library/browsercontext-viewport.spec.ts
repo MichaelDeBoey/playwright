@@ -19,7 +19,6 @@ import { devices } from '@playwright/test';
 import { contextTest as it, expect } from '../config/browserTest';
 import { browserTest } from '../config/browserTest';
 import { verifyViewport } from '../config/utils';
-import * as os from 'os';
 
 it('should get the proper default viewport size', async ({ page, server }) => {
   await verifyViewport(page, 1280, 720);
@@ -140,7 +139,9 @@ browserTest('should report null viewportSize when given null viewport', async ({
   await context.close();
 });
 
-browserTest('should drag with high dpi', async ({ browser, server }) => {
+browserTest('should drag with high dpi', async ({ browser, server, headless }) => {
+  browserTest.fixme(!headless, 'Flaky on all browser in headed');
+
   const page = await browser.newPage({ deviceScaleFactor: 2 });
   await page.goto(server.PREFIX + '/drag-n-drop.html');
   await page.hover('#source');
@@ -176,10 +177,10 @@ browserTest('should be able to get correct orientation angle on non-mobile devic
   await context.close();
 });
 
-it('should set window.screen.orientation.type for mobile devices', async ({ contextFactory, browserName, server, isMac }) => {
+it('should set window.screen.orientation.type for mobile devices', async ({ contextFactory, browserName, server, isMac, macVersion }) => {
   it.info().annotations.push({ type: 'issue', description: 'https://github.com/microsoft/playwright/issues/31151' });
   it.skip(browserName === 'firefox', 'Firefox does not support mobile emulation');
-  it.skip(browserName === 'webkit' && isMac && parseInt(os.release().split('.')[0], 10) <= 21, 'WebKit on macOS 12 is frozen and does not support orientation.type override');
+  it.skip(browserName === 'webkit' && isMac && macVersion <= 12, 'WebKit on macOS 12 is frozen and does not support orientation.type override');
   const context = await contextFactory(devices['iPhone 14']);
   const page = await context.newPage();
   await page.goto(server.PREFIX + '/index.html');

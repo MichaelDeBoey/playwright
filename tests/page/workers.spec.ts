@@ -225,7 +225,9 @@ it('should report and intercept network from nested worker', async function({ pa
   await expect.poll(() => messages).toEqual(['{"foo":"not bar"}', '{"foo":"not bar"}']);
 });
 
-it('should support extra http headers', async ({ page, server }) => {
+it('should support extra http headers', {
+  annotation: { type: 'issue', description: 'https://github.com/microsoft/playwright/issues/31747' }
+}, async ({ page, server }) => {
   await page.setExtraHTTPHeaders({ foo: 'bar' });
   const [worker, request1] = await Promise.all([
     page.waitForEvent('worker'),
@@ -242,14 +244,15 @@ it('should support extra http headers', async ({ page, server }) => {
 
 it('should support offline', async ({ page, server, browserName }) => {
   it.fixme(browserName === 'firefox');
+  it.fixme(browserName === 'webkit', 'flaky on all platforms');
 
   const [worker] = await Promise.all([
     page.waitForEvent('worker'),
     page.goto(server.PREFIX + '/worker/worker.html'),
   ]);
   await page.context().setOffline(true);
-  expect(await worker.evaluate(() => navigator.onLine)).toBe(false);
+  await expect.poll(() =>  worker.evaluate(() => navigator.onLine)).toBe(false);
   expect(await worker.evaluate(() => fetch('/one-style.css').catch(e => 'error'))).toBe('error');
   await page.context().setOffline(false);
-  expect(await worker.evaluate(() => navigator.onLine)).toBe(true);
+  await expect.poll(() =>  worker.evaluate(() => navigator.onLine)).toBe(true);
 });

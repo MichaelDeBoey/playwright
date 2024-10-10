@@ -98,7 +98,7 @@ class SocksProxyConnection {
 
   async connect() {
     if (this.socksProxy.proxyAgentFromOptions)
-      this.target = await this.socksProxy.proxyAgentFromOptions.callback(new EventEmitter() as any, { host: rewriteToLocalhostIfNeeded(this.host), port: this.port, secureEndpoint: false });
+      this.target = await this.socksProxy.proxyAgentFromOptions.connect(new EventEmitter() as any, { host: rewriteToLocalhostIfNeeded(this.host), port: this.port, secureEndpoint: false });
     else
       this.target = await createSocket(rewriteToLocalhostIfNeeded(this.host), this.port);
 
@@ -346,7 +346,7 @@ function rewriteToLocalhostIfNeeded(host: string): string {
 }
 
 export function rewriteOpenSSLErrorIfNeeded(error: Error): Error {
-  if (error.message !== 'unsupported')
+  if (error.message !== 'unsupported' && (error as NodeJS.ErrnoException).code !== 'ERR_CRYPTO_UNSUPPORTED_OPERATION')
     return error;
   return rewriteErrorMessage(error, [
     'Unsupported TLS certificate.',
